@@ -53,14 +53,12 @@ static inline uint32_t modular_inverse32(const uint32_t a)
 // returns 2^32 mod n
 static inline uint32_t compute_modn32(const uint32_t n)
 {
-#if 1
-	return 4294967296ULL % n; // for 32-bit integer this version is faster
-#else
-	if (n <= (1U << 31))
-		return (((1U << 31) % n) << 1) % n;
-	else
+	if (n <= (1U << 31)) {
+		uint32_t res = ((1U << 31) % n) << 1;
+		
+		return res < n ? res : res-n;
+	} else
 		return -n;
-#endif
 }
 
 #define PRIME 1

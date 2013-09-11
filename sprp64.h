@@ -80,9 +80,11 @@ static inline uint64_t modular_inverse64(const uint64_t a)
 // returns 2^64 mod n
 static inline uint64_t compute_modn64(const uint64_t n)
 {
-	if (n <= (1ULL << 63))
-		return (((1ULL << 63) % n) << 1) % n;
-	else
+	if (n <= (1ULL << 63)) {
+		uint64_t res = ((1ULL << 63) % n) << 1;
+		
+		return res < n ? res : res-n;
+	} else
 		return -n;
 }
 
