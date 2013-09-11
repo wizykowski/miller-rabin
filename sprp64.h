@@ -88,7 +88,7 @@ static inline uint64_t compute_modn64(const uint64_t n)
 		return -n;
 }
 
-inline uint64_t compute_a_times_2_64_mod_n(const uint64_t a, const uint64_t n, const uint64_t r)
+static inline uint64_t compute_a_times_2_64_mod_n(const uint64_t a, const uint64_t n, const uint64_t r)
 {
 #if 0
 	return ((unsigned __int128)a<<64) % n;

@@ -39,6 +39,8 @@ static inline int straightforward_mr64(const uint64_t bases[], int bases_cnt, ui
 
 		if (a >= n) a %= n;
 
+		if (a == 0) continue;
+
 		uint64_t x=modular_exponentiation64(a, u, n);
 
 		if (x == 1 || x == n-1) continue;
