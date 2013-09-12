@@ -10,10 +10,7 @@
 #include "sprp32_sf.h"
 
 #include "sprp64.h"
-
-#if defined(_WIN64) || defined(__amd64__)
-	#include "sprp64_sf.h"
-#endif
+#include "sprp64_sf.h"
 
 #define BENCHMARK_ITERATIONS 100000
 
@@ -159,7 +156,6 @@ void run_benchmark()
 			valeff += efficient_mr64(bases64, cnt, n64[j]);
 		time_vals[cnt-1][0] = elapsed_time(start);
 	}
-#if defined(_WIN64) || defined(__amd64__)
 	for (cnt=1; cnt<=BASES_CNT64; cnt++) {
 		time_point start = get_time();
 		for (j=0; j<BENCHMARK_ITERATIONS; j++)
@@ -170,10 +166,6 @@ void run_benchmark()
 		fprintf(stderr, "valsf = %d, valeff = %d\n", valsf, valeff);
 		exit(1);
 	}
-#else
-	for (cnt=1; cnt<=BASES_CNT64; cnt++)
-		time_vals[cnt-1][1] = 0;
-#endif
 
 	print_results(64, BASES_CNT64, time_vals);
 }
