@@ -9,8 +9,9 @@
 #include "sprp32.h"
 #include "sprp32_sf.h"
 
+#include "sprp64.h"
+
 #if defined(_WIN64) || defined(__amd64__)
-	#include "sprp64.h"
 	#include "sprp64_sf.h"
 #endif
 
@@ -38,27 +39,19 @@ uint64_t elapsed_time(const time_point start)
 	return seconds * 1000000000ULL + nseconds;
 }
 
-#if defined(_WIN64) || defined(__amd64__)
-	// found by Jim Sinclair
-	const uint64_t bases64[] = {2, 325, 9375, 28178, 450775, 9780504, 1795265022};
-	#define BASES_CNT64 7
-#endif
+// found by Jim Sinclair
+const uint64_t bases64[] = {2, 325, 9375, 28178, 450775, 9780504, 1795265022};
+#define BASES_CNT64 7
 
 // found by Gerhard Jaeschke
 const uint32_t bases32[] = {2, 7, 61};
 #define BASES_CNT32 3
 // see http://miller-rabin.appspot.com
 
-#if defined(_WIN64) || defined(__amd64__)
-	#define BASES_CNT_MAX BASES_CNT64
-#else
-	#define BASES_CNT_MAX BASES_CNT32
-#endif	
+#define BASES_CNT_MAX BASES_CNT64
 
 static uint32_t n32[BENCHMARK_ITERATIONS];
-#if defined(_WIN64) || defined(__amd64__)
-	static uint64_t n64[BENCHMARK_ITERATIONS];
-#endif
+static uint64_t n64[BENCHMARK_ITERATIONS];
 
 #define WHEEL_PRODUCT 105
 // wheel contains only odd numbers
@@ -85,7 +78,7 @@ static void set_nprimes()
 			n += wheeladvance[(n >> 1) % WHEEL_PRODUCT];
 		n32[i] = n;
 	}
-#if defined(_WIN64) || defined(__amd64__)	
+	
 	for (i = 0; i < BENCHMARK_ITERATIONS; i++) {
 		uint64_t n = myrand64() | 1;
 		n += distancewheel[(n >> 1) % WHEEL_PRODUCT];
@@ -94,7 +87,6 @@ static void set_nprimes()
 			n += wheeladvance[(n >> 1) % WHEEL_PRODUCT];
 		n64[i] = n;
 	}
-#endif
 }
 
 static void set_nintegers()
@@ -108,13 +100,11 @@ static void set_nintegers()
 		n32[i] = n;
 	}
 
-#if defined(_WIN64) || defined(__amd64__)
 	for (i = 0; i < BENCHMARK_ITERATIONS; i++) {
 		uint64_t n = myrand64() | 1;
 		if (n < 5) n = 5;
 		n64[i] = n;
 	}
-#endif
 }
 
 void print_results(const int bits, const int cnt_limit, uint64_t time_vals[][2])
@@ -161,7 +151,6 @@ void run_benchmark()
 	}
 	print_results(32, BASES_CNT32, time_vals);
 
-#if defined(_WIN64) || defined(__amd64__)
 	valsf = 0;
 	valeff = 0;
 	for (cnt=1; cnt<=BASES_CNT64; cnt++) {
@@ -170,6 +159,7 @@ void run_benchmark()
 			valeff += efficient_mr64(bases64, cnt, n64[j]);
 		time_vals[cnt-1][0] = elapsed_time(start);
 	}
+#if defined(_WIN64) || defined(__amd64__)
 	for (cnt=1; cnt<=BASES_CNT64; cnt++) {
 		time_point start = get_time();
 		for (j=0; j<BENCHMARK_ITERATIONS; j++)
@@ -180,8 +170,12 @@ void run_benchmark()
 		fprintf(stderr, "valsf = %d, valeff = %d\n", valsf, valeff);
 		exit(1);
 	}
-	print_results(64, BASES_CNT64, time_vals);
+#else
+	for (cnt=1; cnt<=BASES_CNT64; cnt++)
+		time_vals[cnt-1][1] = 0;
 #endif
+
+	print_results(64, BASES_CNT64, time_vals);
 }
 
 int main()

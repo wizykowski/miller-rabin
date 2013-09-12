@@ -7,6 +7,8 @@
 	#include <intrin.h>
 #endif
 
+#if defined(_WIN64) || defined(__amd64__)
+
 #include "mulmod64.h"
 
 #if 0
@@ -44,7 +46,58 @@ static inline uint64_t mont_prod64(uint64_t a, uint64_t b, uint64_t n, uint64_t 
 	return u >= n ? u-n : u;
 }
 #endif
- 
+
+#else
+
+// returns lower 64-bit part of a*b ; higher part in hi
+static inline uint64_t _mul128(uint64_t a, uint64_t b, uint64_t *hi)
+{
+	uint32_t AH = a >> 32;
+	uint32_t AL = (uint32_t)a;
+
+	uint32_t BH = b >> 32;
+	uint32_t BL = (uint32_t)b;
+
+	uint64_t AHBH = (uint64_t)AH * BH;
+	uint64_t ALBL = (uint64_t)AL * BL;
+	uint64_t AHBL = (uint64_t)AH * BL;
+	uint64_t ALBH = (uint64_t)AL * BH;
+	
+	// take care of integer overflow
+	
+	uint64_t res_lo = ALBL + (AHBL << 32);
+	int carry = res_lo < ALBL ? 1 : 0;
+	res_lo += ALBH << 32;
+	carry += res_lo < (ALBH << 32) ? 1 : 0;
+	uint64_t res_hi = AHBH + (AHBL >> 32) + (ALBH >> 32) + carry;
+
+	*hi = res_hi;
+
+	return res_lo;
+}
+#endif
+
+#if (!defined(_WIN64) && !defined(__amd64__)) || (defined(_WIN64) && defined(_MSC_VER))
+static inline uint64_t mont_prod64(uint64_t a, uint64_t b, uint64_t n, uint64_t npi)
+{
+	uint64_t t_hi, t_lo; // t_hi * 2^64 + t_lo = a*b
+	t_lo = _mul128(a, b, &t_hi);
+	
+	uint64_t m = t_lo * npi;
+	
+	// mn_hi * 2^64 + mn_lo = m*n
+	uint64_t mn_hi, mn_lo;
+	mn_lo = _mul128(m, n, &mn_hi);
+
+	int carry = t_lo + mn_lo < t_lo ? 1 : 0;
+
+	uint64_t u = t_hi + mn_hi + carry;
+	if (u < t_hi) return u-n;
+	
+	return u >= n ? u-n : u;
+}
+#endif
+
 static inline uint64_t mont_square64(const uint64_t a, const uint64_t n, const uint64_t npi)
 {
 	return mont_prod64(a, a, n, npi);
@@ -90,10 +143,31 @@ static inline uint64_t compute_modn64(const uint64_t n)
 
 static inline uint64_t compute_a_times_2_64_mod_n(const uint64_t a, const uint64_t n, const uint64_t r)
 {
+#if defined(_WIN64) || defined(__amd64__)
 #if 0
 	return ((unsigned __int128)a<<64) % n;
 #else
 	return mulmod64(a, r, n);
+#endif
+#else
+	uint64_t res = a % n;
+	int i;
+	for (i=64; i>0; i--) {
+		if (res < (1ULL << 63)) {
+			res <<= 1; if (res >= n) res -= n;
+		} else { // n > res >= 2^63
+			res <<= 1;
+			if (res >= n) res -= n;
+		
+			// res2 = (res + r) % n
+			uint64_t res2 = res + r;
+			if (res2 < res) res2 -= n;
+			
+			res = res2;
+		}
+	}
+
+	return res;
 #endif
 }
 
