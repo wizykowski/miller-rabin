@@ -3,6 +3,48 @@
 
 #include <stdint.h>
 
+#if !defined(_WIN64) && !defined(__amd64__)
+// returns lower 64-bit part of a*b ; higher part in hi
+static inline uint64_t _mul128(uint64_t a, uint64_t b, uint64_t *hi)
+{
+	uint32_t AH = a >> 32;
+	uint32_t AL = (uint32_t)a;
+
+	uint32_t BH = b >> 32;
+	uint32_t BL = (uint32_t)b;
+
+	uint64_t AHBH = (uint64_t)AH * BH;
+	uint64_t ALBL = (uint64_t)AL * BL;
+	uint64_t AHBL = (uint64_t)AH * BL;
+	uint64_t ALBH = (uint64_t)AL * BH;
+	
+	// take care of integer overflow
+	
+	uint64_t middle = AHBL + ALBH;
+
+	if (middle < AHBL) AHBH += (1ULL << 32);
+
+	uint64_t res_lo = ALBL + (middle << 32);
+	if (res_lo < ALBL) AHBH++;
+
+	AHBH += middle >> 32;
+
+	*hi = AHBH;
+
+	return res_lo;
+}
+#elif !defined(_MSC_VER)
+static inline uint64_t _mul128(uint64_t a, uint64_t b, uint64_t *hi)
+{
+	uint64_t lo;
+	asm("mulq %3" : "=a"(lo), "=d"(*hi) : "a"(a), "rm"(b));
+	return lo;
+}
+#else
+	#include <intrin.h>
+#endif
+
+
 #if defined(_WIN64) || defined(__amd64__)
 
 #if 0
@@ -47,7 +89,7 @@ static inline uint64_t mulmod64(uint64_t a, uint64_t b, uint64_t n)
 			}
 		}
 	} else {
-	    while (b) {
+		while (b) {
 			if (b & 1) {
 				r = (n-r > a) ? r+a : r+a-n;
 			}
@@ -59,6 +101,7 @@ static inline uint64_t mulmod64(uint64_t a, uint64_t b, uint64_t n)
 	}
 	return r;
 }
-#endif
+
+#endif // if 64-bit architecture
 
 #endif // _MULMOD64_H_INCLUDED

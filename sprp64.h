@@ -3,15 +3,9 @@
 
 #include <stdint.h>
 
-#ifdef _MSC_VER
-	#include <intrin.h>
-#endif
-
-#if defined(_WIN64) || defined(__amd64__)
-
 #include "mulmod64.h"
 
-#if 0
+#if 0 && (defined(_WIN64) || defined(__amd64__))
 static inline uint64_t mont_prod64(const uint64_t a, const uint64_t b, const uint64_t n, const uint64_t npi)
 {
 	const unsigned __int128 t = (unsigned __int128)a*b;
@@ -27,57 +21,6 @@ static inline uint64_t mont_prod64(const uint64_t a, const uint64_t b, const uin
 	return u >= n ? (uint64_t)(u-n) : u;
 }
 #else
-static inline uint64_t mont_prod64(uint64_t a, uint64_t b, uint64_t n, uint64_t npi)
-{
-	uint64_t t_hi, t_lo; // t_hi * 2^64 + t_lo = a*b
-	asm("mulq %3" : "=a"(t_lo), "=d"(t_hi) : "a"(a), "rm"(b));
-	
-	uint64_t m = t_lo * npi;
-	
-	// mn_hi * 2^64 + mn_lo = m*n
-	uint64_t mn_hi, mn_lo;
-	asm("mulq %3" : "=a"(mn_lo), "=d"(mn_hi) : "a"(m), "rm"(n));
-
-	int carry = t_lo + mn_lo < t_lo ? 1 : 0;
-
-	uint64_t u = t_hi + mn_hi + carry;
-	if (u < t_hi) return u-n;
-	
-	return u >= n ? u-n : u;
-}
-#endif
-
-#else
-
-// returns lower 64-bit part of a*b ; higher part in hi
-static inline uint64_t _mul128(uint64_t a, uint64_t b, uint64_t *hi)
-{
-	uint32_t AH = a >> 32;
-	uint32_t AL = (uint32_t)a;
-
-	uint32_t BH = b >> 32;
-	uint32_t BL = (uint32_t)b;
-
-	uint64_t AHBH = (uint64_t)AH * BH;
-	uint64_t ALBL = (uint64_t)AL * BL;
-	uint64_t AHBL = (uint64_t)AH * BL;
-	uint64_t ALBH = (uint64_t)AL * BH;
-	
-	// take care of integer overflow
-	
-	uint64_t res_lo = ALBL + (AHBL << 32);
-	int carry = res_lo < ALBL ? 1 : 0;
-	res_lo += ALBH << 32;
-	carry += res_lo < (ALBH << 32) ? 1 : 0;
-	uint64_t res_hi = AHBH + (AHBL >> 32) + (ALBH >> 32) + carry;
-
-	*hi = res_hi;
-
-	return res_lo;
-}
-#endif
-
-#if (!defined(_WIN64) && !defined(__amd64__)) || (defined(_WIN64) && defined(_MSC_VER))
 static inline uint64_t mont_prod64(uint64_t a, uint64_t b, uint64_t n, uint64_t npi)
 {
 	uint64_t t_hi, t_lo; // t_hi * 2^64 + t_lo = a*b
