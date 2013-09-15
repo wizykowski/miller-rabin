@@ -68,6 +68,29 @@ static inline uint64_t mulmod64(uint64_t a, uint64_t b, uint64_t n)
 }
 #endif
 
+#elif defined(_WIN64) && defined(_MSC_VER)
+
+// according to documentation future Visual C++ versions
+// may use different registers to store parameters
+//
+// it works at least with Visual C++ 2012
+
+// arguments passed in RCX, RDX, R8
+// return value in RAX
+
+#pragma section("mulmod64", read, execute)
+__declspec(allocate("mulmod64"))
+unsigned char mulmod64_code[] = {
+	0x48, 0x89, 0xC8, // mov rax,rcx
+	0x48, 0xF7, 0xE2, // mul rdx
+	0x49, 0xF7, 0xF0, // div r8
+	0x48, 0x89, 0xD0, // mov rax,rdx
+	0xC3              // ret
+};
+
+uint64_t (__fastcall *mulmod64)(uint64_t, uint64_t, uint64_t) =
+	(uint64_t (__fastcall *)(uint64_t, uint64_t, uint64_t))mulmod64_code;
+
 #else
 
 // requires a, b < n
