@@ -6,7 +6,7 @@
 #ifndef _MSC_VER
 	#include <inttypes.h>
 #else
-	#define PRIu64 "%llu"
+	#define PRIu64 "llu"
 	#define inline __inline
 #endif
 

@@ -23,18 +23,20 @@ static inline uint64_t mont_prod64(const uint64_t a, const uint64_t b, const uin
 #else
 static inline uint64_t mont_prod64(uint64_t a, uint64_t b, uint64_t n, uint64_t npi)
 {
-	uint64_t t_hi, t_lo; // t_hi * 2^64 + t_lo = a*b
+	uint64_t t_hi, t_lo, m, mn_hi, mn_lo, u;
+	int carry;
+
+	// t_hi * 2^64 + t_lo = a*b
 	t_lo = mul128(a, b, &t_hi);
 	
-	uint64_t m = t_lo * npi;
+	m = t_lo * npi;
 	
 	// mn_hi * 2^64 + mn_lo = m*n
-	uint64_t mn_hi, mn_lo;
 	mn_lo = mul128(m, n, &mn_hi);
 
-	int carry = t_lo + mn_lo < t_lo ? 1 : 0;
+	carry = t_lo + mn_lo < t_lo ? 1 : 0;
 
-	uint64_t u = t_hi + mn_hi + carry;
+	u = t_hi + mn_hi + carry;
 	if (u < t_hi) return u-n;
 	
 	return u >= n ? u-n : u;
@@ -125,7 +127,7 @@ static inline int efficient_mr64(const uint64_t bases[], const int cnt, const ui
 	uint64_t u=n-1;
 	const uint64_t nr = n-r;	
 
-	int t=0;
+	int t=0, j;
 
 #ifndef _MSC_VER
 	t = __builtin_ctzll(u);
@@ -137,17 +139,16 @@ static inline int efficient_mr64(const uint64_t bases[], const int cnt, const ui
 	}
 #endif
 
-	int j;
 	for (j=0; j<cnt; j++) {
 		const uint64_t a = bases[j];
 
 		uint64_t A=compute_a_times_2_64_mod_n(a, n, r); // a * 2^64 mod n
+		uint64_t d=r, u_copy=u;
+		int i;
+
 		if (!A) continue; // PRIME in subtest
-	
-		uint64_t d=r;
 
 		// compute a^u mod n
-		uint64_t u_copy = u;
 		do {
 			if (u_copy & 1) d=mont_prod64(d, A, n, npi);
 			A=mont_square64(A, n, npi);
@@ -155,7 +156,6 @@ static inline int efficient_mr64(const uint64_t bases[], const int cnt, const ui
 
 		if (d == r || d == nr) continue; // PRIME in subtest
 
-		int i;
 		for (i=1; i<t; i++) {
 			d=mont_square64(d, n, npi);
 			if (d == r) return COMPOSITE;

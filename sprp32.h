@@ -72,7 +72,7 @@ static inline int efficient_mr32(const uint32_t bases[], const int cnt, const ui
 	uint32_t u=n-1;
 	const uint32_t nr = n-r;
 
-	int t=0;
+	int t=0, j;
 
 #ifndef _MSC_VER
 	t = __builtin_ctz(u);
@@ -84,17 +84,17 @@ static inline int efficient_mr32(const uint32_t bases[], const int cnt, const ui
 	}
 #endif
 
-	int j;
 	for (j=0; j<cnt; j++) {
 		const uint32_t a = bases[j];
+		uint32_t d=r, u_copy = u;
 
 		uint32_t A=((uint64_t)a<<32) % n;
+		int i;
+
 		if (!A) continue; // PRIME in subtest
 
-		uint32_t d=r;
-
 		// compute a^u mod n
-		uint32_t u_copy = u;
+
 		do {
 			if (u_copy & 1) d=mont_prod32(d, A, n, npi);
 			A=mont_square32(A, n, npi);
@@ -102,7 +102,6 @@ static inline int efficient_mr32(const uint32_t bases[], const int cnt, const ui
 
 		if (d == r || d == nr) continue; // PRIME in subtest
 
-		int i;
 		for (i=1; i<t; i++) {
 			d=mont_square32(d, n, npi);
 			if (d == r) return COMPOSITE;

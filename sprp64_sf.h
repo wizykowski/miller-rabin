@@ -20,32 +20,31 @@ static inline int straightforward_mr64(const uint64_t bases[], int bases_cnt, ui
 {
 	uint64_t u=n-1;
 
-#if 0
+#ifdef _MSC_VER
 	// u will be even, as n is required to be odd
-	int t=1; u >>= 1;
+	int t=1, j; u >>= 1;
 
 	while (u % 2 == 0) { // while even
 		t++;
 		u >>= 1;
 	}
 #else
-	int t = __builtin_ctzll(u);
+	int t = __builtin_ctzll(u), j;
 	u >>= t;
 #endif
 
-	int j;
 	for (j=0; j<bases_cnt; j++) {
-		uint64_t a = bases[j];
+		uint64_t a = bases[j], x;
+		int i;
 
 		if (a >= n) a %= n;
 
 		if (a == 0) continue;
 
-		uint64_t x=modular_exponentiation64(a, u, n);
+		x = modular_exponentiation64(a, u, n);
 
 		if (x == 1 || x == n-1) continue;
 
-		int i;
 		for (i=1; i<t; i++) {
 			x=mulmod64(x, x, n);
 			if (x == 1)   return 0;

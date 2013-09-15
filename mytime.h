@@ -13,16 +13,15 @@ static inline time_point get_time()
 	return res;
 }
 
-double diff_time(const LARGE_INTEGER t2, const LARGE_INTEGER t1)
+uint64_t diff_time(const LARGE_INTEGER t2, const LARGE_INTEGER t1)
 {
 	LARGE_INTEGER cycles;
-	double ret;
+	double cycles_per_ns;
 	QueryPerformanceFrequency(&cycles);
 
-	ret=(double)(t2.QuadPart-t1.QuadPart);
-	ret/=cycles.QuadPart;
+	cycles_per_ns = cycles.QuadPart / 1000000000.0;
 
-	return ret;
+	return (double)(t2.QuadPart-t1.QuadPart) / cycles_per_ns;
 }
 
 uint64_t elapsed_time(const time_point start)
@@ -30,7 +29,7 @@ uint64_t elapsed_time(const time_point start)
 	LARGE_INTEGER end;
 	QueryPerformanceCounter(&end);
 
-	return 1000*diff_time(end, start);
+	return diff_time(end, start);
 }
 #else
 typedef struct timespec time_point;

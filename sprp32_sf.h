@@ -27,22 +27,21 @@ static inline uint32_t square_modulo32(uint32_t a, uint32_t n)
 static inline int straightforward_mr32(const uint32_t bases[], int bases_cnt, uint32_t n)
 {
 	uint32_t u=n-1;
-	int t=0;
+	int t=0, j;
 
 	while (u % 2 == 0) { // while even
 		t++;
 		u >>= 1;
 	}
 
-	int j;
 	for (j=0; j<bases_cnt; j++) {
 		uint32_t a = bases[j];
 
-		uint32_t x=modular_exponentiation32(a, u, n);
+		uint32_t x = modular_exponentiation32(a, u, n);
+		int i;
 
 		if (x <= 1 || x == n-1) continue;
 
-		int i;
 		for (i=1; i<t; i++) {
 			x=square_modulo32(x, n);
 			if (x == 1)   return 0;
