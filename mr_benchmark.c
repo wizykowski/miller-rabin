@@ -1,10 +1,17 @@
 #include <stdio.h>
 #include <time.h>
 #include <stdint.h>
-#include <inttypes.h>
 #include <stdlib.h>
 
+#ifndef _MSC_VER
+	#include <inttypes.h>
+#else
+	#define PRIu64 "%llu"
+	#define inline __inline
+#endif
+
 #include "myrand.h"
+#include "mytime.h"
 
 #include "sprp32.h"
 #include "sprp32_sf.h"
@@ -12,29 +19,7 @@
 #include "sprp64.h"
 #include "sprp64_sf.h"
 
-#define BENCHMARK_ITERATIONS 100000
-
-typedef struct timespec time_point;
-
-time_point get_time()
-{
-	struct timespec res;
-
-	clock_gettime(CLOCK_MONOTONIC, &res);
-
-	return res;
-}
-
-uint64_t elapsed_time(const time_point start)
-{
-	struct timespec end;
-	clock_gettime(CLOCK_MONOTONIC, &end);
-
-    long seconds  = end.tv_sec  - start.tv_sec;
-    long nseconds = end.tv_nsec - start.tv_nsec;
-    
-	return seconds * 1000000000ULL + nseconds;
-}
+#define BENCHMARK_ITERATIONS 10000
 
 // found by Jim Sinclair
 const uint64_t bases64[] = {2, 325, 9375, 28178, 450775, 9780504, 1795265022};
@@ -123,10 +108,9 @@ void print_results(const int bits, const int cnt_limit, uint64_t time_vals[][2])
 void run_benchmark()
 {
 	int j, cnt, valsf, valeff;
-	
-	printf("Starting benchmark...\n");
-
 	uint64_t time_vals[BASES_CNT_MAX][2];
+
+	printf("Starting benchmark...\n");
 
 	valsf = 0;
 	valeff = 0;

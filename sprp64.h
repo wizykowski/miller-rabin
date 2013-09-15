@@ -24,13 +24,13 @@ static inline uint64_t mont_prod64(const uint64_t a, const uint64_t b, const uin
 static inline uint64_t mont_prod64(uint64_t a, uint64_t b, uint64_t n, uint64_t npi)
 {
 	uint64_t t_hi, t_lo; // t_hi * 2^64 + t_lo = a*b
-	t_lo = _mul128(a, b, &t_hi);
+	t_lo = mul128(a, b, &t_hi);
 	
 	uint64_t m = t_lo * npi;
 	
 	// mn_hi * 2^64 + mn_lo = m*n
 	uint64_t mn_hi, mn_lo;
-	mn_lo = _mul128(m, n, &mn_hi);
+	mn_lo = mul128(m, n, &mn_hi);
 
 	int carry = t_lo + mn_lo < t_lo ? 1 : 0;
 

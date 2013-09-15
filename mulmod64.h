@@ -5,7 +5,7 @@
 
 #if !defined(_WIN64) && !defined(__amd64__)
 // returns lower 64-bit part of a*b ; higher part in hi
-static inline uint64_t _mul128(uint64_t a, uint64_t b, uint64_t *hi)
+static inline uint64_t mul128(uint64_t a, uint64_t b, uint64_t *hi)
 {
 	uint32_t AH = a >> 32;
 	uint32_t AL = (uint32_t)a;
@@ -34,7 +34,7 @@ static inline uint64_t _mul128(uint64_t a, uint64_t b, uint64_t *hi)
 	return res_lo;
 }
 #elif !defined(_MSC_VER)
-static inline uint64_t _mul128(uint64_t a, uint64_t b, uint64_t *hi)
+static inline uint64_t mul128(uint64_t a, uint64_t b, uint64_t *hi)
 {
 	uint64_t lo;
 	asm("mulq %3" : "=a"(lo), "=d"(*hi) : "a"(a), "rm"(b));
@@ -42,10 +42,11 @@ static inline uint64_t _mul128(uint64_t a, uint64_t b, uint64_t *hi)
 }
 #else
 	#include <intrin.h>
+
+	#define mul128(a, b, hi) _umul128(a, b, hi)
 #endif
 
-
-#if defined(_WIN64) || defined(__amd64__)
+#if (defined(_WIN64) || defined(__amd64__)) && !defined(_MSC_VER)
 
 #if 0
 static inline uint64_t mulmod64(uint64_t a, uint64_t b, uint64_t n)
