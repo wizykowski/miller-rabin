@@ -2,4 +2,7 @@ language: c
 compiler:
   - clang
   - gcc
+env:
+  - LDFLAGS=-m64
+  - LDFLAGS=-m32
 script: make

@@ -1,9 +1,9 @@
 CFLAGS = -Wall -Wextra -O2
 ifdef ComSpec
 	# we are compiling under Windows
-	LDFLAGS = 
+	CC = gcc
 else
-	LDFLAGS = -lrt
+	LDFLAGS += -lrt
 endif
 
 all: mr_benchmark
