@@ -1,4 +1,3 @@
-CC = gcc
 CFLAGS = -Wall -Wextra -O2
 ifdef ComSpec
 	# we are compiling under Windows
