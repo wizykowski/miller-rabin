@@ -8,4 +8,6 @@ env:
 before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -qq gcc-multilib
-script: make
+before_script:
+  - cat /proc/cpuinfo | grep name | uniq
+script: make && ./mr_benchmark
