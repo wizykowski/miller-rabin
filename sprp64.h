@@ -49,30 +49,23 @@ static inline uint64_t mont_square64(const uint64_t a, const uint64_t n, const u
 }
 
 // WARNING: a must be odd
-// returns a^-1 mod 2^64
+// returns -a^-1 mod 2^64
+// method from B. Arazi 'On Primality Testing Using Purely Divisionless Operations'
+// The Computer Journal (1994) 37 (3): 219-222, Procedure 5.
 static inline uint64_t modular_inverse64(const uint64_t a)
 {
-	uint64_t u,x,w,z,q;
-	
-	x = 1; z = a;
+	uint64_t S = 1, J = 0;
+	int i;
 
-	q = (-z)/z + 1; // = 2^64 / z
-	u = - q; // = -q * x
-	w = - q * z; // = b - q * z = 2^64 - q * z
-
-	// after first iteration all variables are 64-bit
-
-	while (w) {
-		if (w < z) {
-			q = u; u = x; x = q; // swap(u, x)
-			q = w; w = z; z = q; // swap(w, z)
+	for (i = 0; i < 64; i++) {
+		if (S & 1) {
+			J |= (1ULL << i);
+			S += a;
 		}
-		q = w / z;
-		u -= q * x;
-		w -= q * z;
+		S >>= 1;
 	}
-	
-	return x;
+
+	return J;
 }
 
 // returns 2^64 mod n
@@ -121,7 +114,7 @@ static inline uint64_t compute_a_times_2_64_mod_n(const uint64_t a, const uint64
 
 static inline int efficient_mr64(const uint64_t bases[], const int cnt, const uint64_t n)
 {
-	const uint64_t npi = modular_inverse64(-((int64_t)n));
+	const uint64_t npi = modular_inverse64(n);
 	const uint64_t r = compute_modn64(n);
 
 	uint64_t u=n-1;

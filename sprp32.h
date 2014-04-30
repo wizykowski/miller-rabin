@@ -24,30 +24,23 @@ static inline uint32_t mont_square32(const uint32_t a, const uint32_t n, const u
 }
 
 // WARNING: a must be odd
-// returns a^-1 mod 2^32
+// returns -a^-1 mod 2^32
+// method from B. Arazi 'On Primality Testing Using Purely Divisionless Operations'
+// The Computer Journal (1994) 37 (3): 219-222, Procedure 5.
 static inline uint32_t modular_inverse32(const uint32_t a)
 {
-	uint32_t u,x,w,z,q;
+	uint32_t S = 1, J = 0;
+	int i;
 
-	x = 1; z = a;
-
-	q = (-z)/z + 1; // = 2^32 / z
-	u = - q; // = -q * x
-	w = - q * z; // = b - q * z = 2^32 - q * z
-
-	// after first iteration all variables are 32-bit
-
-	while (w) {
-		if (w < z) {
-			q = u; u = x; x = q; // swap(u, x)
-			q = w; w = z; z = q; // swap(w, z)
+	for (i = 0; i < 32; i++) {
+		if (S & 1) {
+			J |= (1U << i);
+			S += a;
 		}
-		q = w / z;
-		u -= q * x;
-		w -= q * z;
+		S >>= 1;
 	}
-	
-	return x;
+
+	return J;
 }
 
 // returns 2^32 mod n
@@ -66,7 +59,7 @@ static inline uint32_t compute_modn32(const uint32_t n)
 
 static inline int efficient_mr32(const uint32_t bases[], const int cnt, const uint32_t n)
 {
-	const unsigned npi = modular_inverse32(-((int)n));
+	const unsigned npi = modular_inverse32(n);
 	const unsigned r = compute_modn32(n);
 
 	uint32_t u=n-1;
