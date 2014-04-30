@@ -10,4 +10,4 @@ before_install:
   - sudo apt-get install -qq gcc-multilib
 before_script:
   - cat /proc/cpuinfo | grep name | uniq
-script: make && ./mr_benchmark
+script: make && ./tests && ./mr_benchmark

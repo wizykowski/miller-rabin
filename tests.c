@@ -122,5 +122,5 @@ int main()
 		printf("Error running tests.");
 	}
 
-	return 0;
+	return res;
 }
