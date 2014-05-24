@@ -40,7 +40,7 @@ static inline int straightforward_mr32(const uint32_t bases[], int bases_cnt, ui
 		uint32_t x = modular_exponentiation32(a, u, n);
 		int i;
 
-		if (x <= 1 || x == n-1) continue;
+		if (x == 1 || x == n-1) continue;
 
 		for (i=1; i<t; i++) {
 			x=square_modulo32(x, n);
