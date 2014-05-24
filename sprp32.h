@@ -27,17 +27,22 @@ static inline uint32_t mont_square32(const uint32_t a, const uint32_t n, const u
 // returns -a^-1 mod 2^32
 // method from B. Arazi 'On Primality Testing Using Purely Divisionless Operations'
 // The Computer Journal (1994) 37 (3): 219-222, Procedure 5.
+// modified to process 4 bits at a time
 static inline uint32_t modular_inverse32(const uint32_t a)
 {
 	uint32_t S = 1, J = 0;
 	int i;
 
-	for (i = 0; i < 32; i++) {
-		if (S & 1) {
-			J |= (1U << i);
-			S += a;
-		}
-		S >>= 1;
+	static const char mask[8] = {15, 5, 3, 9, 7, 13, 11, 1};
+
+	const char amask = mask[(a >> 1) & 7];
+
+	for (i = 0; i < 8; i++) {
+		int index = (amask * (S & 15)) & 15;
+
+		J |= (uint32_t)index << (4 * i);
+
+		S = (S + a * index) >> 4;
 	}
 
 	return J;
