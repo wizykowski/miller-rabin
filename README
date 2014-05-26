@@ -2,5 +2,5 @@ This repository contains efficient implementation of the Miller-Rabin primality 
 
 Files sprp32.h and sprp64.h contain my efficient implementation. Files sprp32_sf.h and sprp64_sf.h contain straighforward implementation, used for performance comparison.
 
--- Wojciech Izykowski <wizykowski@gmail.com>, 2013
+-- Wojciech Izykowski <wizykowski@gmail.com>, 2013-2014
 
