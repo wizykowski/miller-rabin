@@ -35,10 +35,16 @@ static inline int straightforward_mr32(const uint32_t bases[], int bases_cnt, ui
 	}
 
 	for (j=0; j<bases_cnt; j++) {
-		uint32_t a = bases[j];
-
-		uint32_t x = modular_exponentiation32(a, u, n);
+		uint32_t a = bases[j], x;
 		int i;
+
+		if (a >= n) a %= n;
+
+
+
+		if (a == 0) continue;
+
+		x = modular_exponentiation32(a, u, n);
 
 		if (x == 1 || x == n-1) continue;
 
