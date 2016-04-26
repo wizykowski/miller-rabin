@@ -73,7 +73,7 @@ static inline uint64_t mulmod64(uint64_t a, uint64_t b, uint64_t n)
 // according to documentation future Visual C++ versions
 // may use different registers to store parameters
 //
-// it works at least with Visual C++ 2012
+// it works at least with Visual C++ 2012 and Visual C++ 2015
 
 // arguments passed in RCX, RDX, R8
 // return value in RAX
@@ -89,7 +89,7 @@ unsigned char mulmod64_code[] = {
 };
 
 uint64_t (__fastcall *mulmod64)(uint64_t, uint64_t, uint64_t) =
-	(uint64_t (__fastcall *)(uint64_t, uint64_t, uint64_t))mulmod64_code;
+	(uint64_t (__fastcall *)(uint64_t, uint64_t, uint64_t))(void *)mulmod64_code;
 
 #else
 
